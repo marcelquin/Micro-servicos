@@ -1,0 +1,25 @@
+version: "3"
+services:
+
+  ms_fileserver_api:
+    build: /File_Server
+    container_name: ms_fileServer
+    ports:
+      - 8096:8096
+    environment:
+      - springdoc.swagger-ui.tryItOutEnabled=true
+      - springdoc.swagger-ui.filter=true
+      - springdoc.swagger-ui.path=/api-documentation
+      - springdoc.api-docs.path=/api-api-docs
+      - app.caminhoImagem=//app//Upload//
+      - app.caminhoImagemZip=//app//Upload//Zip//
+      - spring.servlet.multipart.max-file-size=200MB
+      - spring.servlet.multipart.max-request-size=200MB
+    volumes:
+      - update:/app/Upload/
+      - updatezip:/app/Upload/Zip/
+    restart: on-failure
+
+volumes:
+  update:
+  updatezip:

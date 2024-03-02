@@ -1,0 +1,8 @@
+version: "3"
+services:
+
+  ms_emailserver_api:
+    build: /Email_Server
+    ports:
+      - 8095:8095
+    restart: on-failure

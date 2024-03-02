@@ -1,0 +1,77 @@
+MS_CadCliente:
+	PORTA:8091
+	MAPPING: ms_Cliente
+		Post - NovoCliente
+		Get - ListarCliente, BuscarClientePorId, BuscarClientePorNome,
+			  BuscarClientePorCpf
+		Put - AlterarDados, AlterarEndereco, AlterarContato
+		Delete - DeletarCliente
+MS_ Cad_Funcionario:
+PORTA:8092
+	MAPPING: cargo
+		Post - NovoCargo
+		Get -  listarCargos, BuscarPorId
+		Put -  EditarCargo, desativarCargo
+		Delete -
+	MAPPING: colaorador
+		Post - NovoCadastro, EnviarDocumentos
+		Get -  listarColaborador, BuscarPorId
+		Put -  AlterarCargo, AlterarDocumento, EditarEndereco, EditarContato
+				CadastrarFilhos, DesativarColaborador
+		Delete -
+	MAPPING: departamento
+		Post - NovoDepartamento
+		Get - listarDepartamento, BuscarDepartamentoPorId
+		Put - EditarDepartamento, desativarDepartamento
+		Delete -
+MS_ Cad_FuncionarioEquipe:
+PORTA:8093
+	MAPPING: cargo
+		Post - NovoCargo
+		Get -  listarCargos, BuscarPorId
+		Put -  EditarCargo, desativarCargo
+		Delete -
+	MAPPING: colaorador
+		Post - NovoCadastro, EnviarDocumentos
+		Get -  listarColaborador, BuscarPorId
+		Put -  AlterarCargo, AlterarDocumento, EditarEndereco, EditarContato
+				CadastrarFilhos, DesativarColaborador
+		Delete -
+	MAPPING: departamento
+		Post - NovoDepartamento
+		Get - listarDepartamento, BuscarDepartamentoPorId
+		Put - EditarDepartamento, desativarDepartamento
+		Delete -
+	MAPPING: equipe
+		Post - NovaEquipe
+		Get - ListarEquipes, BuscarEquipePorId
+		Put - ALterarDadosEquipe, AdicionarColaborador
+		Delete -
+MS_GerenciaProjetos:
+PORTA:8094
+	MAPPING: ms_Fragmento
+		Post - NovoFragmento
+		Get - ListarFragmentos, BuscaFragmentoPorId
+		Put - EditarInformacoes, AlterarLinkGit, IniciarDesenvolvimento,
+			  IniciarTestes, FinalizarFragmento
+		Delete -
+	MAPPING: ms_Projeto
+		Post - NovoProjeto
+		Get - ListarProjetos, BuscaProjetoPorId
+		Put - EditarInformacoes, IniciarProjeto, IniciarTestes,
+			  FinalizarProjeto
+		Delete - Deletarprojeto
+MS_ Email_Server:
+	PORTA:8095
+	MAPPING: MS_email
+		Post - /EnviarEmail
+		Get -
+		Put -
+		Delete -
+MS_ File_Server:
+PORTA:8096
+	MAPPING: ms_FileServer
+		Post - SalvarArquivo
+		Get - downloadFiles
+		Put - AlterarArquivo, AdicionarArquivo
+		Delete -

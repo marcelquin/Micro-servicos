@@ -1,0 +1,27 @@
+version: "3"
+services:
+
+  ms_cadcliente_db:
+    image: 'mysql'
+    environment:
+        - 'MYSQL_DATABASE=ms_cadcliente_db'
+        - 'MYSQL_PASSWORD=mh8q23pr99'
+        - 'MYSQL_ROOT_PASSWORD=mh8q23pr99'
+        - 'MYSQL_USER=admin'
+    ports:
+        - 3306:3306
+    volumes:
+        - /db/ms_cadcliente_db
+
+  ms_cadcliente_api:
+    build: /Cad_Cliente
+    ports:
+      - 8091:8091
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://ms_cadcliente_db:3306/ms_cadcliente_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=mh8q23pr99
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - ms_cadcliente_db
+    restart: on-failure
