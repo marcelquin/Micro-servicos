@@ -11,11 +11,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -55,6 +57,17 @@ public class ColaboradorController {
     @GetMapping("/BuscarPorId")
     public ResponseEntity<Colaborador> BuscarPorId(@RequestParam Long id)
     { return colaboradorGet.BuscarPorId(id);}
+
+    @Operation(summary = "Busca Registro por id e disponibiliza download", method = "GET")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "422", description = "Dados de requisição inválida"),
+            @ApiResponse(responseCode = "400", description = "Parametros inválidos"),
+            @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
+    })
+    @GetMapping("/downloadFiles")
+    public ResponseEntity<Resource> downloadFiles(@RequestParam Long id) throws IOException
+    { return colaboradorGet.downloadFiles(id);}
 
     @Operation(summary = "Salva novo colaborador", method = "POST")
     @ApiResponses(value = {
@@ -146,6 +159,18 @@ public class ColaboradorController {
     @PostMapping(value = "/EnviarDocumentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Colaborador> EnviarDocumentos(@RequestParam Long idColaborador, MultipartFile[] arquivos)
     { return colaboradorPost.EnviarDocumentos(idColaborador, arquivos);}
+
+    @Operation(summary = "Adiciona documentos ao registro", method = "POST")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "422", description = "Dados de requisição inválida"),
+            @ApiResponse(responseCode = "400", description = "Parametros inválidos"),
+            @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
+    })
+    @PostMapping(value = "/AdicionarArquivos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Colaborador> AdicionarArquivos(@RequestParam Long idColaborador,@RequestPart MultipartFile[] arquivos)
+    { return colaboradorPut.AdicionarArquivos(idColaborador, arquivos);}
+
 
     @Operation(summary = "Cadastra dados de filhos existentes", method = "PUT")
     @ApiResponses(value = {

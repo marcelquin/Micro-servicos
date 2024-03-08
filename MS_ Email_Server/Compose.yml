@@ -1,8 +1,41 @@
 version: "3"
 services:
 
-  ms_emailserver_api:
-    build: /Email_Server
+  db_ms_emailServer:
+    image: 'mysql'
+    container_name: db_ms_emailServer
+    environment:
+      - 'MYSQL_DATABASE=db_ms_emailServer'
+      - 'MYSQL_PASSWORD=mh8q23pr99'
+      - 'MYSQL_ROOT_PASSWORD=mh8q23pr99'
+      - 'MYSQL_USER=admin'
     ports:
-      - 8095:8095
+      - 3306:3306
+    volumes:
+      - vol_emailServer_db:/db/db_ms_emailServer
+
+
+  ms_emailServer:
+    build: /Email_Server
+    container_name: ms_emailServer
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db_ms_emailServer:3306/db_ms_emailServer
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=mh8q23pr99
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - app.email=<email>
+      - spring.mail.host=smtp.gmail.com
+      - spring.mail.port=587
+      - spring.mail.username=<email>
+      - spring.mail.password=<Senha>
+      - spring.mail.properties.mail.smtp.auth=true
+      - spring.mail.properties.mail.smtp.starttls.enable=true
+    depends_on:
+      - db_ms_emailServer
     restart: on-failure
+
+
+volumes:
+  vol_emailServer_db:

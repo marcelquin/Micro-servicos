@@ -3,6 +3,9 @@ package App.Bussness;
 import App.Domain.Email;
 import App.Infra.Exceotions.NullargumentsException;
 import App.Infra.Gateway.EmailGateway;
+import App.Infra.Percistence.Entity.EmailEntity;
+import App.Infra.Percistence.Repository.EmailRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSender;
@@ -15,9 +18,14 @@ import java.time.LocalDateTime;
 public class EmailService implements EmailGateway {
 
     private final MailSender mailSender;
+    private final EmailRepository emailRepository;
 
-    public EmailService(MailSender mailSender) {
+    @Value("#{environment['App.email']}")
+    private String emailto;
+
+    public EmailService(MailSender mailSender, EmailRepository emailRepository) {
         this.mailSender = mailSender;
+        this.emailRepository = emailRepository;
     }
 
     @Override
@@ -27,12 +35,20 @@ public class EmailService implements EmailGateway {
             if(para != null && assunto != null && mensagem != null )
             {
                 var mail = new SimpleMailMessage();
-                mail.setFrom("noreply@email.com");
+                mail.setFrom(emailto);
                 mail.setTo(para);
                 mail.setSubject(assunto);
                 mail.setText(mensagem);
                 mailSender.send(mail);
-                Email response = new Email("noreply@email.com",para,assunto,mensagem, LocalDateTime.now());
+                EmailEntity entity = new EmailEntity();
+                entity.setEmissor(emailto);
+                entity.setReceptor(para);
+                entity.setAssunto(assunto);
+                entity.setMensagem(mensagem);
+                entity.setTimeStamp(LocalDateTime.now());
+                emailRepository.save(entity);
+                Email response = new Email(entity.getEmissor(),entity.getReceptor(),entity.getAssunto(),
+                                           entity.getMensagem(), entity.getTimeStamp());
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
             else

@@ -11,17 +11,25 @@ import App.ApiRest.Infra.Persistence.Entity.EnderecoEntity;
 import App.ApiRest.Infra.Persistence.Repository.ClienteRepository;
 import App.ApiRest.Infra.Persistence.Repository.ContatoRepository;
 import App.ApiRest.Infra.Persistence.Repository.EnderecoRepository;
-import ch.qos.logback.core.net.SyslogOutputStream;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceToOne;
-import org.springframework.cglib.core.Local;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static org.apache.tomcat.util.http.fileupload.FileUploadBase.CONTENT_DISPOSITION;
 
 @Service
 public class ClienteService implements ClienteGateway {
@@ -63,7 +71,7 @@ public class ClienteService implements ClienteGateway {
                 {
                     ClienteEntity entity = clienteRepository.findById(id).get();
                     Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                            entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                            entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                             entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                             entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                             entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -82,6 +90,7 @@ public class ClienteService implements ClienteGateway {
         return null;
     }
 
+
     @Override
     public ResponseEntity<Cliente> BuscarClientePorNome(String nome)
     {
@@ -93,7 +102,7 @@ public class ClienteService implements ClienteGateway {
                 {
                     ClienteEntity entity = clienteRepository.findBynome(nome).get();
                     Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                            entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                            entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                             entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                             entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                             entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -123,7 +132,7 @@ public class ClienteService implements ClienteGateway {
                 {
                     ClienteEntity entity = clienteRepository.findBycpf(cpf).get();
                     Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                            entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                            entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                             entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                             entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                             entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -160,11 +169,13 @@ public class ClienteService implements ClienteGateway {
                 entity.setRg(rg);
                 entity.setCpf(cpf);
                 entity.setDataNascimento(dataNascimento);
+                int dig = (int) (111111 + Math.random() * 999999);
+                String codigo = "MS_"+dig;
+                entity.setCodigoIdentificador(codigo);
                 Endereco record = restTemplate
-                    .getForEntity(           //viacep.com.br/ws/01001000/json/
+                    .getForEntity(
                             String.format("http://viacep.com.br/ws/%s/json/", cep),
                              Endereco.class).getBody();
-                //criar exceção endereço não encontrado e lançar caso record nula
                     EnderecoEntity endereco = new EnderecoEntity(record);
                     endereco.setNumero(numero);
                     endereco.setTimeStamp(LocalDateTime.now());
@@ -180,8 +191,8 @@ public class ClienteService implements ClienteGateway {
                     entity.setContato(contato);
                     entity.setTimeStamp(LocalDateTime.now());
                     clienteRepository.save(entity);
-                    Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                        entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
+                        entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                         entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                         entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                         entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -216,7 +227,7 @@ public class ClienteService implements ClienteGateway {
                     entity.setTimeStamp(LocalDateTime.now());
                     clienteRepository.save(entity);
                     Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                            entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                            entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                             entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                             entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                             entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -262,7 +273,7 @@ public class ClienteService implements ClienteGateway {
                         endereco.setTimeStamp(LocalDateTime.now());
                         enderecoRepository.save(endereco);
                         Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                                entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                                entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                                 entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                                 entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                                 entity.getContato().getTelefone(),entity.getContato().getCelular());
@@ -302,7 +313,7 @@ public class ClienteService implements ClienteGateway {
                         contato.setTimeStamp(LocalDateTime.now());
                         contatoRepository.save(contato);
                         Cliente response = new Cliente(entity.getNome(),entity.getSobrenome(),entity.getRg(),
-                                entity.getCpf(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
+                                entity.getCpf(), entity.getCodigoIdentificador(), entity.getDataNascimento(),entity.getEndereco().getCep(),entity.getEndereco().getLogradouro(),
                                 entity.getEndereco().getNumero(),entity.getEndereco().getComplemento(),entity.getEndereco().getBairro(),
                                 entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),entity.getContato().getEmail(),
                                 entity.getContato().getTelefone(),entity.getContato().getCelular());

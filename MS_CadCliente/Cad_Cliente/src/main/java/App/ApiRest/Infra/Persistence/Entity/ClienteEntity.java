@@ -36,6 +36,8 @@ public class ClienteEntity {
     @Column(unique = true)
     private Long rg;
 
+    private String codigoIdentificador;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private EnderecoEntity endereco;

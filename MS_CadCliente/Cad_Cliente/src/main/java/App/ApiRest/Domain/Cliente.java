@@ -7,6 +7,7 @@ public record Cliente(
         String sobrenome,
         Long rg,
         Long cpf,
+        String codigoIdentificador,
         LocalDate dataNascimento,
         String cep,
         String logradouro,

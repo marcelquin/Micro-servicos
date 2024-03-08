@@ -1,27 +1,43 @@
 version: "3"
 services:
 
-  ms_cadcolaborador_db:
+  db_ms_cadcolaborador:
     image: 'mysql'
+    container_name: db_ms_cadcolaborador
     environment:
-        - 'MYSQL_DATABASE=ms_cadcolaborador_db'
-        - 'MYSQL_PASSWORD=mh8q23pr99'
-        - 'MYSQL_ROOT_PASSWORD=mh8q23pr99'
-        - 'MYSQL_USER=admin'
+      - 'MYSQL_DATABASE=db_ms_cadcolaborador'
+      - 'MYSQL_PASSWORD=mh8q23pr99'
+      - 'MYSQL_ROOT_PASSWORD=mh8q23pr99'
+      - 'MYSQL_USER=admin'
     ports:
-        - 3306:3306
+      - 3306:3306
     volumes:
-        - /db/ms_cadcolaborador_db
+      - vol_cadcolaborador_db:/db/db_ms_cadcolaborador
 
-  ms_cadcolaborador_api:
+
+  ms_cadcolaborador:
     build: /Cad_Funcionario/App
+    container_name: ms_cadcolaborador
     ports:
-      - 8092:8092
+      - 8080:8080
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://ms_cadcolaborador_db:3306/ms_cadcolaborador_db
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db_ms_cadcolaborador:3306/db_ms_cadcolaborador
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=mh8q23pr99
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - spring.servlet.multipart.max-file-size=350MB
+      - spring.servlet.multipart.max-request-size=350MB
+      - app.caminhoImagem=/app/
+      - app.caminhoImagemZip=/app/Zip/
     depends_on:
-      - ms_cadcolaborador_db
+      - db_ms_cadcolaborador
     restart: on-failure
+    volumes:
+      - vol_file:/app/
+      - vol_filezip:/app/Zip/
+
+
+volumes:
+  vol_file:
+  vol_filezip:
+  vol_cadcolaborador_db:

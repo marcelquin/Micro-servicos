@@ -1,5 +1,6 @@
 package App.ApiRest.Bussness;
 
+import App.ApiRest.Bussness.File.FileServerService;
 import App.ApiRest.Domain.Colaborador;
 import App.ApiRest.Infra.Exceptions.EntityNotFoundException;
 import App.ApiRest.Infra.Exceptions.NullargumentsException;
@@ -8,15 +9,26 @@ import App.ApiRest.Infra.Persistence.Entity.*;
 import App.ApiRest.Infra.Persistence.Enum.EstadoCivil;
 import App.ApiRest.Infra.Persistence.Enum.GrauEstudo;
 import App.ApiRest.Infra.Persistence.Repository.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.tomcat.util.http.fileupload.FileUploadBase.CONTENT_DISPOSITION;
 
 @Service
 public class ColaboradorService implements ColaboradorGateway {
@@ -29,8 +41,12 @@ public class ColaboradorService implements ColaboradorGateway {
     private final DocumentosRepository documentosRepository;
     private final FilhosRepository filhosRepository;
     private final ArquivoRepository arquivoRepository;
+    private final FileServerService fileServerService;
 
-    public ColaboradorService(ColaboradorRepository colaboradorRepository, EnderecoRepository enderecoRepository, ContatoRepository contatoRepository, CargoRepository cargoRepository, DocumentosRepository documentosRepository, FilhosRepository filhosRepository, ArquivoRepository arquivoRepository) {
+    @Value("#{environment['App.caminhozip']}")
+    private String caminhozip;
+
+    public ColaboradorService(ColaboradorRepository colaboradorRepository, EnderecoRepository enderecoRepository, ContatoRepository contatoRepository, CargoRepository cargoRepository, DocumentosRepository documentosRepository, FilhosRepository filhosRepository, ArquivoRepository arquivoRepository, FileServerService fileServerService) {
         this.colaboradorRepository = colaboradorRepository;
         this.enderecoRepository = enderecoRepository;
         this.contatoRepository = contatoRepository;
@@ -38,6 +54,7 @@ public class ColaboradorService implements ColaboradorGateway {
         this.documentosRepository = documentosRepository;
         this.filhosRepository = filhosRepository;
         this.arquivoRepository = arquivoRepository;
+        this.fileServerService = fileServerService;
     }
 
     @Override
@@ -78,6 +95,43 @@ public class ColaboradorService implements ColaboradorGateway {
             }
             else
             { throw new NullargumentsException(); }
+        }
+        catch (Exception e)
+        {
+            e.getMessage();
+        }
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<Resource> downloadFiles(Long id) throws IOException
+    {
+        try
+        {
+
+            if(id != null)
+            {
+                if(colaboradorRepository.existsById(id))
+                {
+                    ColaboradorEntity entity = colaboradorRepository.findById(id).get();
+                    String filename = entity.getMatricula()+".zip";
+                    Path filePath  = Path.of(caminhozip+filename);
+                    if (!Files.exists(filePath)) {
+                        throw new FileNotFoundException(filename + " was not found on the server");
+                    }
+                    Resource resource = new UrlResource(filePath.toUri());
+                    HttpHeaders httpHeaders = new HttpHeaders();
+                    httpHeaders.add("File-Name", filename);
+                    httpHeaders.add(CONTENT_DISPOSITION, "attachment;File-Name=" + resource.getFilename());
+                    return ResponseEntity.ok().contentType(MediaType.parseMediaType(Files.probeContentType(filePath)))
+                            .headers(httpHeaders).body(resource);
+                }
+                else
+                { throw new EntityNotFoundException(); }
+            }
+            else
+            { throw new NullargumentsException(); }
+
         }
         catch (Exception e)
         {
@@ -400,11 +454,11 @@ public class ColaboradorService implements ColaboradorGateway {
                           arquivosEntity.setTimeStamp(LocalDateTime.now());
                           arquivoRepository.save(arquivosEntity);
                           arquivosLista.add(arquivosEntity);
-                          //fileserver_Post
                       }
                       documentos.setArquivos(arquivosLista);
                       documentos.setTimeStamp(LocalDateTime.now());
                       documentosRepository.save(documentos);
+                      fileServerService.Upload(entity.getMatricula(), arquivos);
                       Colaborador response = new Colaborador(entity.getNome(),entity.getSobrenome(), entity.getDataNascimento(),
                               entity.getMatricula(),entity.getCargo().getDepartamento().getNome(),
                               entity.getCargo().getNome(),entity.getCargo().getSalario(), entity.getCargo().getCargaHorariaSemanal(),
@@ -419,6 +473,58 @@ public class ColaboradorService implements ColaboradorGateway {
               }
               else
               { throw new EntityNotFoundException();}
+            }
+            else
+            { throw  new NullargumentsException();}
+        }
+        catch (Exception e)
+        {
+            e.getMessage();
+        }
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<Colaborador> AdicionarArquivos(Long idColaborador, MultipartFile[] arquivos)
+    {
+        try
+        {
+            if(idColaborador != null && arquivos != null)
+            {
+                if(colaboradorRepository.existsById(idColaborador))
+                {
+                    ColaboradorEntity entity = colaboradorRepository.findById(idColaborador).get();
+                    if(documentosRepository.existsById(entity.getDocumentos().getId()))
+                    {
+                        DocumentosEntity documentos = documentosRepository.findById(entity.getDocumentos().getId()).get();
+                        List<ArquivosEntity> arquivosLista = new ArrayList<>();
+                        for(MultipartFile arquivo : arquivos)
+                        {
+                            ArquivosEntity arquivosEntity = new ArquivosEntity();
+                            arquivosEntity.setNomeArquivo(arquivo.getOriginalFilename());
+                            arquivosEntity.setTimeStamp(LocalDateTime.now());
+                            arquivoRepository.save(arquivosEntity);
+                            arquivosLista.add(arquivosEntity);
+
+                        }
+                        documentos.setArquivos(arquivosLista);
+                        documentos.setTimeStamp(LocalDateTime.now());
+                        documentosRepository.save(documentos);
+                        fileServerService.AddFile(entity.getMatricula(), arquivos);
+                        Colaborador response = new Colaborador(entity.getNome(),entity.getSobrenome(), entity.getDataNascimento(),
+                                entity.getMatricula(),entity.getCargo().getDepartamento().getNome(),
+                                entity.getCargo().getNome(),entity.getCargo().getSalario(), entity.getCargo().getCargaHorariaSemanal(),
+                                entity.getEndereco().getLogradouro(),entity.getEndereco().getNumero(),entity.getEndereco().getBairro(),
+                                entity.getEndereco().getCep(),entity.getEndereco().getCidade(),entity.getEndereco().getEstado(),
+                                entity.getContato().getEmail(),entity.getContato().getTelefone(),entity.getContato().getCelular(),
+                                entity.getContato().getInstagram(),entity.getContato().getSite());
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    }
+                    else
+                    { throw new EntityNotFoundException();}
+                }
+                else
+                { throw new EntityNotFoundException();}
             }
             else
             { throw  new NullargumentsException();}

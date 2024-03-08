@@ -31,6 +31,9 @@ public class UseCaseColaboradorPut {
                                                         Long bancoAgencia, GrauEstudo grauEstudo, EstadoCivil estadoCivil)
     {return  colaboradorGateway.AlterarDocumento(idColaborador, localNascimento, estadoNascimento, nomeMae, nomePai, cpf, rg, rGOrgao, rGDataEmissao, carteiraTrabalhoNumero, carteiraTrabalhoSerie, tituloEleitorNumero, tituloEleitorZona, tituloEleitorSessao, tituloEleitorEstado, carteiraReservistaNumero, carteiraReservistaSerie, carteiraReservistaCategoria, pisNumero, pisDataCadastro, pisBanco, pisAgencia, bancoConta, banco, bancoAgencia, grauEstudo, estadoCivil);}
 
+    public ResponseEntity<Colaborador> AdicionarArquivos(@RequestParam Long idColaborador,@RequestPart MultipartFile[] arquivos)
+    { return colaboradorGateway.AdicionarArquivos(idColaborador, arquivos);}
+
     public ResponseEntity<Colaborador> AlterarCargo(@RequestParam Long idColaborador, @RequestParam Long idCargo,@RequestParam LocalDate dataContratacao)
     {return colaboradorGateway.AlterarCargo(idColaborador, idCargo, dataContratacao);}
 

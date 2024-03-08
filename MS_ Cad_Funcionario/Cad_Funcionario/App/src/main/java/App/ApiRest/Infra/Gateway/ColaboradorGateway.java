@@ -5,11 +5,13 @@ import App.ApiRest.Domain.Colaborador;
 import App.ApiRest.Infra.Persistence.Entity.ColaboradorEntity;
 import App.ApiRest.Infra.Persistence.Enum.EstadoCivil;
 import App.ApiRest.Infra.Persistence.Enum.GrauEstudo;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public interface ColaboradorGateway {
     public ResponseEntity<List<ColaboradorEntity>> listarColaborador();
 
     public ResponseEntity<Colaborador> BuscarPorId(@RequestParam Long id);
-
+    public ResponseEntity<Resource> downloadFiles(@RequestParam Long id) throws IOException;
     public ResponseEntity<Colaborador> NovoCadastro(@RequestParam String nome, @RequestParam String sobrenome, @RequestParam LocalDate dataNascimento,
                                                     @RequestParam String logradouro, @RequestParam String numero,
                                                     @RequestParam String bairro, @RequestParam Long cep,
@@ -48,6 +50,7 @@ public interface ColaboradorGateway {
                                                         LocalDate pisDataCadastro, String pisBanco, Long pisAgencia, Long bancoConta, String banco,
                                                         Long bancoAgencia, GrauEstudo grauEstudo, EstadoCivil estadoCivil);
 
+    public ResponseEntity<Colaborador> AdicionarArquivos(@RequestParam Long idColaborador,@RequestPart MultipartFile[] arquivos);
 
     public ResponseEntity<Colaborador> EditarEndereco(@RequestParam Long idColaborador, String logradouro, String numero,
                                                       String bairro, Long cep, String cidade, String estado);

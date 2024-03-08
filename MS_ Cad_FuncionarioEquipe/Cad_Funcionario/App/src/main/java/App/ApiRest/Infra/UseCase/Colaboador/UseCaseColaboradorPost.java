@@ -41,4 +41,6 @@ public class UseCaseColaboradorPost {
 
     public ResponseEntity<Colaborador> EnviarDocumentos(@RequestParam Long idColaborador, @RequestPart MultipartFile[] arquivos)
     { return colaboradorGateway.EnviarDocumentos(idColaborador, arquivos);}
+
+
 }
